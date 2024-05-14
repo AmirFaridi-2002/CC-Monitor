@@ -1,3 +1,7 @@
+"""
+    Manually write data in the list and run the script to generate the csv file.
+    The csv file will be used to read the data in the main script.
+"""
 import pandas as pd
 
 class Symbol:
@@ -8,24 +12,24 @@ class Symbol:
         
         
 data_list = [   # name,                  high,            low
-                Symbol("BTC/USDT"       , 64715.3        , 56537.5 ),
-                Symbol("ETH/USDT"       , 3287           , 2814),
-                Symbol("DOGE/USDT"      , 0.17022        , 0.12003),
-                Symbol("ADA/USDT"       , 0.47568        , 0.41769),
-                Symbol("BNB/USDT"       , 604            , 536),
-                Symbol("TRB/USDT"       , 98.800         , 44.121),
-                Symbol("FTM/USDT"       , 0.7281         , 0.6090),
-                Symbol("ONT/USDT"       , 0.4195         , 0.3251),
-                Symbol("APT/USDT"       , 9.2983         , 8.1278),
-                Symbol("INJ/USDT"       , 26.207         ,   21.901),
-                Symbol("WLD/USDT"       , 5.8454         , 4.1743),
-                Symbol("OP/USDT"        , 3.0383         , 2.2688),
-                Symbol("SHIB/USDT"      , 0.000026307    , 0.000020493),
-                Symbol("BCH/USDT"       , 480.25         , 399.41),
-                Symbol("DOT/USDT"       , 7.410          , 6.026 ),
-                Symbol("FRONT/USDT"     , 1.1729         , 0.7407),
+                Symbol("BTC/USDT"       , 65514        , 60141 ),
+                Symbol("ETH/USDT"       , 3221           , 2878),
+                Symbol("DOGE/USDT"      , 0.16914        , 0.13915),
+                Symbol("ADA/USDT"       , 0.47515        , 0.43300),
+                Symbol("BNB/USDT"       , 606            , 573),
+                # Symbol("TRB/USDT"       , 98.800         , 44.121),
+                Symbol("FTM/USDT"       , 0.7495         , 0.6503),
+                # Symbol("ONT/USDT"       , 0.4195         , 0.3251),
+                # Symbol("APT/USDT"       , 9.2983         , 8.1278),
+                Symbol("INJ/USDT"       , 26.989         ,   22.802),
+                Symbol("WLD/USDT"       , 6.5342         , 5.2089),
+                # Symbol("OP/USDT"        , 3.0383         , 2.2688),
+                # Symbol("SHIB/USDT"      , 0.000026307    , 0.000020493),
+                # Symbol("BCH/USDT"       , 480.25         , 399.41),
+                Symbol("DOT/USDT"       , 7.472          , 6.539 ),
+                # Symbol("FRONT/USDT"     ,          , ),
                 # Symbol("AVAX/USDT"      , 75.000         , 60.000),
-                # Symbol("WIF/USDT"       , 0.0000000000001, 0.0000000000001),
+                Symbol("WIF/USDT"       , 3.6803         , 2.7358),
                 # Symbol("MATIC/USDT"     , 1.500          , 1.200),
 ]
 

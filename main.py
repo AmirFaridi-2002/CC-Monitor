@@ -69,14 +69,10 @@ def fetch_data(symbol : str = 'BTC/USDT', timeframe : str = '5m', limit : int = 
                 return None
             
 def get_weekly_map(symbol : str = 'BTC/USDT', flag : bool = True):
-    """ flag: if set, fetch data from the default dataframe. Otherwise, fetch data from the exchange """
+    """ flag: if set, fetch data from the default dataframe. Otherwise, fetch data from the exchange (This part is not implemented yet...) """
     high, upper_mid, mid, lower_mid, low = 0, 0, 0, 0, 0
-    if not flag:
-                data = fetch_data(symbol = symbol, timeframe = '1w', limit = 2)
-                data = data.iloc[1]
-    else:
-                data = DEFAULT_DF[DEFAULT_DF['symbol'] == symbol]
-                data = data.iloc[-1]
+    data = DEFAULT_DF[DEFAULT_DF['symbol'] == symbol]
+    data = data.iloc[0]
                 
     """ Weekly MAP calculation """
     high, low = data['high'], data['low']
@@ -91,7 +87,7 @@ def get_current_price(symbol : str = 'BTC/USDT'):
 
 def create_chart(symbol : str, data : pandas.DataFrame, high : int, low : int, 
                     mid : int, lower_mid : int, upper_mid : int, current_price : int, FIG_FLAG : bool = FIG_FLAG):
-    """ If the flag is set, use go.Figure(). Otherwise, use matplotlib """
+    """ If the flag is set, use go.Figure(). Otherwise, use matplotlib (Matplotlib option is not implemented yet...) """
     if FIG_FLAG:
                 fig = go.Figure()
                 fig.update_layout(width=1000, height=500)
@@ -105,24 +101,6 @@ def create_chart(symbol : str, data : pandas.DataFrame, high : int, low : int,
                 fig.update_layout(hovermode="x unified")
                 fig.update_layout(xaxis_rangeslider_visible=False)
                 return fig
-    # else:
-                #### NOT TESTED YET... ####
-                # fig, ax = plt.subplots()
-                # ax.plot(data.index, data['close'], label='Close Price')
-                # ax.plot(data.index, data['open'], label='Open Price')
-                # ax.plot(data.index, data['high'], label='High Price')
-                # ax.plot(data.index, data['low'], label='Low Price')
-                # ax.axhline(high, color='red', linestyle='--', label='High')
-                # ax.axhline(mid, color='blue', linestyle='--', label='Mid')
-                # ax.axhline(upper_mid, color='green', linestyle='--', label='Upper Mid')
-                # ax.axhline(lower_mid, color='green', linestyle='--', label='Lower Mid')
-                # ax.axhline(low, color='red', linestyle='--', label='Low')
-                # ax.axhline(current_price, color='black', linestyle='--', label='Current Price')
-                # ax.set_xlabel('Time')
-                # ax.set_ylabel('Price')
-                # ax.set_title(f'{symbol} Price')
-                # ax.legend()
-                # return fig
 
 def remove_symbol(symbol):
     """ Remove a symbol from the lists """
@@ -229,15 +207,13 @@ HELP = """
     /details <symbol> <timeframe> <limit> - Get details of a symbol (chart and whether it is in alerts list or not)
     
     /default_symbols - Adds default symbols to the list
-    
-    /set_resolution <width> <height> <scale> - Set resolution of the chart
-    
-    /set_format <format> - Set format of the chart
-    
+        
     /help - Get help
     """
 def run():
     outp(text = "Bot is running", c = 'purple')
+    DEFAULT_SYMBOLS = DEFAULT_DF['symbol'].tolist()
+    
     get_updates = URL + "/getUpdates"
     response = requests.get(get_updates + "?offset=-1")
     update_id = json.loads(response.text)["result"][0]["update_id"]
@@ -298,24 +274,7 @@ def run():
             elif text == "/default_symbols":
                 for symbol in DEFAULT_SYMBOLS:
                     threading.Thread(target = main, args = (symbol,)).start()
-                send_message(chat_id, "Added default symbols to the list")
-                
-            elif text.startswith("/set_resolution"):
-                width, height, scale = text.split(" ")[1:]
-                CHART_MUTEX.acquire()
-                RESOLUTION = (int(width), int(height), int(scale))
-                CHART_MUTEX.release()
-                send_message(chat_id, f"Resolution set to {RESOLUTION}")
-            
-            elif text.startswith("/set_format"):
-                format = text.split(" ")[1]
-                if format in FORMATS:
-                    CHART_MUTEX.acquire()
-                    FORMAT = format
-                    CHART_MUTEX.release()
-                    send_message(chat_id, f"Format set to {FORMAT}")
-                else:
-                    send_message(chat_id, f"Invalid format. Valid formats: {', '.join(FORMATS)}")                
+                send_message(chat_id, "Added default symbols to the list")               
                 
             else:
                 send_message(chat_id, "Invalid command")
@@ -332,3 +291,6 @@ if __name__ == '__main__':
         else: outp(text = "Invalid argument \nUsage: python main.py <auto/import>", c = 'red')
         
     else:   outp(text = "Invalid argument \nUsage: python main.py <auto/import>", c = 'red')
+    
+    # cd D:\workspace\Projects\; & ./venv/Scripts/activate; cd CC-Monitor
+    # ghaza . meeraj . emtehan nahayi . seyyed
