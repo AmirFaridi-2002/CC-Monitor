@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import matplotlib.pyplot as plt
 import requests, json, time, datetime, os, sys
-import threading
+import threading    # TODO : Recheck the threading part.
 
 from colorit import *
 init_colorit()
@@ -11,7 +11,9 @@ def outp(text : str, c : str = 'green', endl : bool = True) -> None:
     """ Outputs a colored text """
     try: print(color(text, getattr(Colors, c)), end = "\n" if endl else "", flush = True)
     except: print(f'Invalid color: {c}\n Valid colors: {", ".join([i for i in dir(Colors) if not i.startswith("__")])}')
-    
+
+
+# TODO : The initialization part of the script should be rewritten.
 FIG_FLAG = True
 DEFAULT_DF = pandas.DataFrame
 DEFAULT_SYMBOLS = [symbol + "/USDT" for symbol in ['BTC', 'DOGE', 'ONT', 'FTM', 'APT', 'ETH', 'TRB', 'INJ', 'WLD', 'BNB', 'OP', 'SHIB', 'BCH', 'DOT']]
@@ -21,40 +23,46 @@ except: raise FileNotFoundError("data.csv not found")
 RESOLUTION = (1280, 720, 6)
 FORMAT = 'png'
 FORMATS = ['png', 'jpeg', 'webp', 'svg', 'pdf']
-CHART_MUTEX = threading.Lock()       # Mutex lock for format and resolution
+CHART_MUTEX = threading.Lock()
 
 URL      = "https://api.telegram.org/bot6615328187:AAF_LGRnTJrmPJsh_A4xR6EIOmmJmsBGuPY"
 ADMIN    = "1830034753"
+
+# TODO : Handle the authorized users. /Add or /Remove users. They sould be able to use the bot independently. Only the ADMIN should be able to add or remove users.
 AUTHORIZED = [ADMIN]
 EXCHANGE = ccxt.bingx()
 
-SYMBOLS  = []   # symbol, thread id pair
+SYMBOLS  = []
 SYMBOLS_MUTEX = threading.Lock()
 
-ALERTS   = []   # symbol, thread id pair
+ALERTS   = []
 ALERTS_MUTEX = threading.Lock()
 
 TOLERANCE = 0.05
 
 
 def send_image(chat_id, img_path, caption):
+    # TODO : Make it robust. Handle exceptions and errors, and make it user-friendly
     url = f"{URL}/sendPhoto"
     files = {'photo': open(img_path, 'rb')}
     data = {'chat_id' : chat_id, 'caption': caption}
     requests.post(url, files=files, data=data)
     
 def send_message(chat_id, message):
+    # TODO : Make it robust. Handle exceptions and errors, and make it user-friendly
     url = f"{URL}/sendMessage"
     data = {'chat_id' : chat_id, 'text': message}
     requests.post(url, data=data)
     
 def send_file(chat_id, file_path, caption):
+    # TODO : Make it robust. Handle exceptions and errors, and make it user-friendly
     url = f"{URL}/sendDocument"
     files = {'document': open(file_path, 'rb')}
     data = {'chat_id' : chat_id, 'caption': caption}
     requests.post(url, files=files, data=data)
     
 def fetch_data(symbol : str = 'BTC/USDT', timeframe : str = '5m', limit : int = 100):
+    # 
     try:
                 data = EXCHANGE.fetch_ohlcv(symbol = symbol, timeframe = timeframe, limit = limit)
                 data = pandas.DataFrame(data, columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume'])
@@ -67,7 +75,8 @@ def fetch_data(symbol : str = 'BTC/USDT', timeframe : str = '5m', limit : int = 
                 return None
             
 def get_weekly_map(symbol : str = 'BTC/USDT', flag : bool = True):
-    """ flag: if set, fetch data from the default dataframe. Otherwise, fetch data from the exchange (This part is not implemented yet...) """
+    # TODO : Make it robust. Handle exceptions and errors, and make it user-friendly
+    """ flag: if set, fetch data from the default dataframe. Otherwise, fetch data from the exchange (This part is not implemented yet...)(The bool flag should be deleted...) """
     if flag:
             high, upper_mid, mid, lower_mid, low = 0, 0, 0, 0, 0
             data = DEFAULT_DF[DEFAULT_DF['symbol'] == symbol]
@@ -81,12 +90,13 @@ def get_weekly_map(symbol : str = 'BTC/USDT', flag : bool = True):
     return high, upper_mid, mid, lower_mid, low
 
 def get_current_price(symbol : str = 'BTC/USDT'):
+    # TODO : Make it robust. Handle exceptions and errors, and make it user-friendly
     data = fetch_data(symbol = symbol, timeframe = '1m', limit = 1)
     return data['close'].iloc[0]
 
 def create_chart(symbol : str, data : pandas.DataFrame, high : int, low : int, 
                     mid : int, lower_mid : int, upper_mid : int, current_price : int, FIG_FLAG : bool = FIG_FLAG):
-    # TODO : Implement matplotlib option
+    # TODO : Implement matplotlib option (Rethought this and it is not needed. The go.Figure() is enough.)
     """ If the flag is set, use go.Figure(). Otherwise, use matplotlib (Matplotlib option is not implemented yet...) """
     if FIG_FLAG:
                 fig = go.Figure()
@@ -104,6 +114,7 @@ def create_chart(symbol : str, data : pandas.DataFrame, high : int, low : int,
                 return fig
 
 def remove_symbol(symbol):
+    # TODO : Make it robust. Handle exceptions and errors, and make it user-friendly
     """ Remove a symbol from the lists """
     SYMBOLS_MUTEX.acquire()
     for idx in range(len(SYMBOLS)):
@@ -123,6 +134,7 @@ def remove_symbol(symbol):
 
            
 def send_details(symbol, timeframe, limit):
+    # TODO : Make it robust. Handle exceptions and errors, and make it user-friendly
     data = fetch_data(symbol = symbol, timeframe = timeframe, limit = limit)
     outp(text = "fetched data. \t", c = "orange", endl = False)
     
@@ -135,7 +147,7 @@ def send_details(symbol, timeframe, limit):
     
     name = symbol.split('/')[0]
     
-    # TODO : Check the flag and handle the matplotlib option
+    # TODO : Check the flag and handle the matplotlib option (Not needed...)
     fig = create_chart(symbol, data, high, low, mid, lower_mid, upper_mid, current_price)
     outp("created chart. \t", c = "orange", endl = False)
     
@@ -151,6 +163,7 @@ def send_details(symbol, timeframe, limit):
 
 
 def main(symbol):
+    # TODO : Add the option to set the monitoring mode and edit the last message of the bot as the alert list changes.
     SYMBOLS_MUTEX.acquire()
     if symbol not in [pair[0] for pair in SYMBOLS]:
         SYMBOLS.append((symbol, threading.get_ident()))
@@ -196,6 +209,7 @@ def main(symbol):
         /set_resolution
         /set_format
         /set_chart  
+        /set_monitoring_mode
 """
 HELP = """
     Commands:
