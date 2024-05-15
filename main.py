@@ -12,15 +12,11 @@ def outp(text : str, c : str = 'green', endl : bool = True) -> None:
     try: print(color(text, getattr(Colors, c)), end = "\n" if endl else "", flush = True)
     except: print(f'Invalid color: {c}\n Valid colors: {", ".join([i for i in dir(Colors) if not i.startswith("__")])}')
     
-ARG = None
 FIG_FLAG = True
 DEFAULT_DF = pandas.DataFrame
-try: DEFAULT_DF = pandas.read_csv('data.csv')
-except Exception as e:
-    outp(text = e, c = 'red')
-    if ARG == "import": exit(1)
-
 DEFAULT_SYMBOLS = [symbol + "/USDT" for symbol in ['BTC', 'DOGE', 'ONT', 'FTM', 'APT', 'ETH', 'TRB', 'INJ', 'WLD', 'BNB', 'OP', 'SHIB', 'BCH', 'DOT']]
+try: DEFAULT_DF = pandas.read_csv('data.csv')
+except: raise FileNotFoundError("data.csv not found")
 
 RESOLUTION = (1280, 720, 6)
 FORMAT = 'png'
@@ -37,6 +33,8 @@ SYMBOLS_MUTEX = threading.Lock()
 
 ALERTS   = []   # symbol, thread id pair
 ALERTS_MUTEX = threading.Lock()
+
+TOLERANCE = 0.05
 
 
 def send_image(chat_id, img_path, caption):
@@ -70,9 +68,10 @@ def fetch_data(symbol : str = 'BTC/USDT', timeframe : str = '5m', limit : int = 
             
 def get_weekly_map(symbol : str = 'BTC/USDT', flag : bool = True):
     """ flag: if set, fetch data from the default dataframe. Otherwise, fetch data from the exchange (This part is not implemented yet...) """
-    high, upper_mid, mid, lower_mid, low = 0, 0, 0, 0, 0
-    data = DEFAULT_DF[DEFAULT_DF['symbol'] == symbol]
-    data = data.iloc[0]
+    if flag:
+            high, upper_mid, mid, lower_mid, low = 0, 0, 0, 0, 0
+            data = DEFAULT_DF[DEFAULT_DF['symbol'] == symbol]
+            data = data.iloc[0]
                 
     """ Weekly MAP calculation """
     high, low = data['high'], data['low']
@@ -87,6 +86,7 @@ def get_current_price(symbol : str = 'BTC/USDT'):
 
 def create_chart(symbol : str, data : pandas.DataFrame, high : int, low : int, 
                     mid : int, lower_mid : int, upper_mid : int, current_price : int, FIG_FLAG : bool = FIG_FLAG):
+    # TODO : Implement matplotlib option
     """ If the flag is set, use go.Figure(). Otherwise, use matplotlib (Matplotlib option is not implemented yet...) """
     if FIG_FLAG:
                 fig = go.Figure()
@@ -98,6 +98,7 @@ def create_chart(symbol : str, data : pandas.DataFrame, high : int, low : int,
                 fig.add_hline(y=lower_mid, line_dash="dot", line_color="green", annotation_text="Lower Mid", annotation_position="bottom right")
                 fig.add_hline(y=low, line_dash="dot", line_color="red", annotation_text="Low", annotation_position="bottom right")
                 fig.add_hline(y=current_price, line_dash="dot", line_color="black", annotation_text="", annotation_position="bottom right")
+                fig.update_layout(title_text=f"{symbol} Chart")
                 fig.update_layout(hovermode="x unified")
                 fig.update_layout(xaxis_rangeslider_visible=False)
                 return fig
@@ -110,6 +111,7 @@ def remove_symbol(symbol):
             SYMBOLS.pop(idx)
             break
     SYMBOLS_MUTEX.release()
+    
     ALERTS_MUTEX.acquire()
     for idx in range(len(ALERTS)):
         if ALERTS[idx][0] == symbol:
@@ -133,6 +135,7 @@ def send_details(symbol, timeframe, limit):
     
     name = symbol.split('/')[0]
     
+    # TODO : Check the flag and handle the matplotlib option
     fig = create_chart(symbol, data, high, low, mid, lower_mid, upper_mid, current_price)
     outp("created chart. \t", c = "orange", endl = False)
     
@@ -158,10 +161,9 @@ def main(symbol):
         outp(text = f"{symbol} is already in the list", c = 'orange')
         return
     SYMBOLS_MUTEX.release()
-    tolerance = 0.05
-    beginning_of_week = False
+    
     high, upper_mid, mid, lower_mid, low = get_weekly_map(symbol = symbol, flag = True if ARG == "import" else False)
-    tolerance_interval = (high - low) / 4 * tolerance
+    tolerance_interval = (high - low) / 4 * TOLERANCE
     while True:
         try:
             SYMBOLS_MUTEX.acquire()
@@ -170,7 +172,6 @@ def main(symbol):
                 return
             SYMBOLS_MUTEX.release()
             
-            if beginning_of_week: high, upper_mid, mid, lower_mid, low = get_weekly_map(symbol = symbol, flag = True if ARG == "import" else False)
             current_price = get_current_price(symbol = symbol)
             
             if ((low - tolerance_interval <= current_price <= low + tolerance_interval) or (high - tolerance_interval <= current_price <= high + tolerance_interval)
@@ -189,7 +190,13 @@ def main(symbol):
             outp(text = e, c = 'red')
 
             
-            
+""" TODO :
+        - Add commands below
+        /set_tolerance
+        /set_resolution
+        /set_format
+        /set_chart  
+"""
 HELP = """
     Commands:
     /add <symbol> - Add a symbol to the list
@@ -210,6 +217,7 @@ HELP = """
         
     /help - Get help
     """
+
 def run():
     outp(text = "Bot is running", c = 'purple')
     DEFAULT_SYMBOLS = DEFAULT_DF['symbol'].tolist()
@@ -285,12 +293,11 @@ def run():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
+    # TODO : Currently, the only argument is 'import'. Implement other arguments
+    if len(sys.argv) == 2:
         ARG = sys.argv[1]
-        if ARG == 'auto' or ARG == 'import': run()
-        else: outp(text = "Invalid argument \nUsage: python main.py <auto/import>", c = 'red')
-        
-    else:   outp(text = "Invalid argument \nUsage: python main.py <auto/import>", c = 'red')
+        DEFAULT_SYMBOLS = DEFAULT_DF['symbol'].tolist() if ARG == 'import' else []
+        if ARG == 'import': run()        
+    else:   outp(text = "Invalid argument \nUsage: python main.py <import/optional>", c = 'red')
     
     # cd D:\workspace\Projects\; & ./venv/Scripts/activate; cd CC-Monitor
-    # ghaza . meeraj . emtehan nahayi . seyyed
